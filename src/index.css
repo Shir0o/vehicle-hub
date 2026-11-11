@@ -6,6 +6,10 @@
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
     --sar: env(safe-area-inset-right, 0px);
+
+    /* Native UI (scrollbars, form controls, carets) follows the dark theme
+       instead of painting a white gutter against slate-950. */
+    color-scheme: dark;
   }
 
   html, body {
@@ -13,6 +17,41 @@
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #020617; /* slate-950 canvas fallback */
+  }
+
+  /* Sleek slate scrollbars — thin, translucent, no harsh white track. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(51, 65, 85, 0.5) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(51, 65, 85, 0.5); /* slate-700 @ 50% */
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(71, 85, 105, 0.75); /* slate-600 */
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background-color: rgba(100, 116, 139, 0.85); /* slate-500 */
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }
 

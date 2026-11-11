@@ -7,6 +7,7 @@ import {
   Flame,
   Info,
   Layers,
+  Pencil,
   Sparkles,
   Wrench,
   ChevronRight,
@@ -147,9 +148,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="flex flex-wrap items-center gap-2 pt-1 justify-center sm:justify-start">
                 <button
                   onClick={onOpenOdometer}
-                  className="rounded-lg bg-blue-600/20 px-3 py-1.5 text-xs font-medium text-blue-300 border border-blue-500/30 hover:bg-blue-600/30 transition-colors"
+                  className="inline-flex items-center rounded-lg bg-blue-600/20 px-3 py-1.5 text-xs font-medium text-blue-300 border border-blue-500/30 hover:bg-blue-600/30 transition-colors"
                 >
-                  Odometer: {profile.currentOdometer.toLocaleString()} mi ✏️
+                  Odometer: {profile.currentOdometer.toLocaleString()} mi
+                  <Pencil className="w-3.5 h-3.5 ml-1.5" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => onNavigateTab('logger')}
