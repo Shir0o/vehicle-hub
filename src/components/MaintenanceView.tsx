@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Calendar,
   CheckCircle2,
@@ -54,6 +54,36 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
   const [costUsd, setCostUsd] = useState<number>(85);
   const [provider, setProvider] = useState<string>('Honda Service');
   const [notes, setNotes] = useState<string>('');
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!showAddModal) return;
+
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setShowAddModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      const previous = previouslyFocusedRef.current;
+      previouslyFocusedRef.current = null;
+      if (previous && document.contains(previous) && typeof previous.focus === 'function') {
+        previous.focus();
+      }
+    };
+  }, [showAddModal]);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) setShowAddModal(false);
+  };
 
   const toggleService = (s: ServiceCategory) => {
     if (selectedServices.includes(s)) {
@@ -251,28 +281,44 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
 
       {/* Record Service Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-5 sm:p-6 shadow-2xl space-y-4 my-8">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto"
+          onClick={handleBackdropClick}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="service-modal-title"
+            className="w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-5 sm:p-6 shadow-2xl space-y-4 my-8"
+          >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2 text-blue-400">
                 <Wrench className="w-5 h-5" />
-                <h3 className="font-bold text-slate-100">Record Vehicle Service</h3>
+                <h3 id="service-modal-title" className="font-bold text-slate-100">
+                  Record Vehicle Service
+                </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowAddModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                aria-label="Close dialog"
+                className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label
+                    htmlFor="service-date-input"
+                    className="block text-xs font-medium text-slate-300 mb-1"
+                  >
                     Date
                   </label>
                   <input
+                    id="service-date-input"
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
@@ -282,10 +328,14 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label
+                    htmlFor="service-odometer-input"
+                    className="block text-xs font-medium text-slate-300 mb-1"
+                  >
                     Odometer (mi)
                   </label>
                   <input
+                    id="service-odometer-input"
                     type="number"
                     value={odometer}
                     onChange={(e) => setOdometer(parseInt(e.target.value, 10) || 0)}
@@ -297,9 +347,9 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
 
               {/* Service Items Selection */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <div className="block text-xs font-medium text-slate-300 mb-1.5">
                   Services Performed (Select all that apply)
-                </label>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto p-1 rounded-xl border border-slate-800 bg-slate-950/60">
                   {ALL_SERVICES.map((s) => {
                     const isChecked = selectedServices.includes(s.id);
@@ -308,6 +358,7 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                         type="button"
                         key={s.id}
                         onClick={() => toggleService(s.id)}
+                        aria-pressed={isChecked}
                         className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-left transition-colors ${
                           isChecked
                             ? 'bg-blue-600/20 text-blue-300 border border-blue-500/40 font-medium'
@@ -328,10 +379,14 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label
+                    htmlFor="service-minder-input"
+                    className="block text-xs font-medium text-slate-300 mb-1"
+                  >
                     Minder Codes (e.g. A, 1, 2)
                   </label>
                   <input
+                    id="service-minder-input"
                     type="text"
                     value={minderCodes}
                     onChange={(e) => setMinderCodes(e.target.value)}
@@ -341,10 +396,14 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label
+                    htmlFor="service-cost-input"
+                    className="block text-xs font-medium text-slate-300 mb-1"
+                  >
                     Cost ($ USD)
                   </label>
                   <input
+                    id="service-cost-input"
                     type="number"
                     step="0.01"
                     min="0"
@@ -356,10 +415,14 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label
+                  htmlFor="service-provider-input"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
                   Service Provider / Facility
                 </label>
                 <input
+                  id="service-provider-input"
                   type="text"
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}
@@ -369,10 +432,14 @@ export const MaintenanceView: React.FC<MaintenanceViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label
+                  htmlFor="service-notes-input"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
                   Notes / Observations
                 </label>
                 <input
+                  id="service-notes-input"
                   type="text"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
